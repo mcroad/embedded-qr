@@ -1,0 +1,8 @@
+[package]
+name = "embedded-qr"
+version = "1.7.0"
+authors = ["Project Nayuki", "Roady McRoad <roady@mcroad.me>"]
+description = "High-quality QR Code generator library"
+homepage = "https://github.com/mcroad/embedded-qr"
+repository = "https://github.com/mcroad/embedded-qr"
+license = "MIT"
