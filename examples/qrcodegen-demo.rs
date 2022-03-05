@@ -24,13 +24,8 @@
  *   Software.
  */
 
-extern crate qrcodegen;
-use qrcodegen::Mask;
-use qrcodegen::QrCode;
-use qrcodegen::QrCodeEcc;
-use qrcodegen::QrSegment;
-use qrcodegen::QrSegmentMode;
-use qrcodegen::Version;
+extern crate embedded_qr;
+use embedded_qr::{Mask, QrCode, QrCodeEcc, QrDrawable, QrSegment, QrSegmentMode, Version};
 
 // The main application program.
 fn main() {
@@ -271,14 +266,14 @@ fn do_segment_demo() {
             0x018A, 0x0036, 0x0141, 0x0144, 0x0001, 0x0000, 0x0249, 0x0240, 0x0249, 0x0000, 0x0104,
             0x0105, 0x0113, 0x0115, 0x0000, 0x0208, 0x01FF, 0x0008,
         ];
-        let mut bb = qrcodegen::BitBuffer::new(&mut tempbuffer);
+        let mut bb = embedded_qr::BitBuffer::new(&mut tempbuffer);
         for &c in &kanjichars {
             bb.append_bits(c, 13);
         }
         let segs = [{
             let bitlen = bb.len();
             QrSegment::new(
-                qrcodegen::QrSegmentMode::Kanji,
+                embedded_qr::QrSegmentMode::Kanji,
                 kanjichars.len(),
                 &tempbuffer,
                 bitlen,

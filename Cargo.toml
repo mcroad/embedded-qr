@@ -6,3 +6,6 @@ description = "High-quality QR Code generator library"
 homepage = "https://github.com/mcroad/embedded-qr"
 repository = "https://github.com/mcroad/embedded-qr"
 license = "MIT"
+
+[dependencies]
+embedded-graphics = "0.7.1"

@@ -88,6 +88,13 @@
 //! ```
 
 #![no_std]
+#![feature(generic_const_exprs)]
+
+extern crate embedded_graphics;
+mod drawable;
+
+pub use drawable::QrDrawable;
+
 use core::convert::TryFrom;
 
 /*---- QrCode functionality ----*/
