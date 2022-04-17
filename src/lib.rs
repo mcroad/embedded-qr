@@ -88,6 +88,7 @@
 //! ```
 
 #![no_std]
+#![forbid(unsafe_code)]
 #![feature(generic_const_exprs)]
 
 extern crate embedded_graphics;
@@ -131,7 +132,9 @@ pub struct QrCode<'a> {
 impl<'a> QrCode<'a> {
     /*---- Static factory functions (high level) ----*/
 
-    /// Returns a QR Code representing the given Unicode text string with the given encoding parameters.
+    /// Encodes the given text string to a QR Code, returning a wrapped `QrCode` if successful.
+    /// If the data is too long to fit in any version in the given range
+    /// at the given ECC level, then `Err` is returned.
     ///
     /// The smallest possible QR Code version within the given range is automatically
     /// chosen for the output. Iff boostecl is `true`, then the ECC level of the result
@@ -139,7 +142,17 @@ impl<'a> QrCode<'a> {
     /// version. The mask number is either between 0 to 7 (inclusive) to force that
     /// mask, or `None` to automatically choose an appropriate mask (which may be slow).
     ///
-    /// The arrays tempbuffer and outbuffer must each have a length of at least maxversion.buffer_len().
+    /// About the slices, letting len = maxversion.buffer_len():
+    /// - Before calling the function:
+    ///   - The slices tempbuffer and outbuffer each must have a length of at least len.
+    ///   - If a slice is longer than len, then the function will not
+    ///     read from or write to the suffix array[len .. array.len()].
+    ///   - The initial values of both slices can be arbitrary
+    ///     because the function always writes before reading.
+    /// - After the function returns, both slices have no guarantee on what values are stored.
+    ///
+    /// If successful, the resulting QR Code may use numeric,
+    /// alphanumeric, or byte mode to encode the text.
     ///
     /// In the most optimistic case, a QR Code at version 40 with low ECC
     /// can hold any UTF-8 string up to 2953 bytes, or any alphanumeric string
@@ -148,13 +161,6 @@ impl<'a> QrCode<'a> {
     ///
     /// Please consult the QR Code specification for information on
     /// data capacities per version, ECC level, and text encoding mode.
-    ///
-    /// After the function returns, tempbuffer contains no useful data.
-    ///
-    /// If successful, the resulting QR Code may use numeric, alphanumeric, or byte mode to encode the text.
-    ///
-    /// Returns a wrapped `QrCode` if successful, or `Err` if the
-    /// data is too long to fit in any version at the given ECC level.
     pub fn encode_text<'b>(
         text: &str,
         tempbuffer: &'b mut [u8],
@@ -221,23 +227,34 @@ impl<'a> QrCode<'a> {
         ))
     }
 
-    /// Returns a QR Code representing the given binary data with the given encoding parameters.
+    /// Encodes the given binary data to a QR Code, returning a wrapped `QrCode` if successful.
+    /// If the data is too long to fit in any version in the given range
+    /// at the given ECC level, then `Err` is returned.
     ///
-    /// The arrays dataandtemp and outbuffer must each have a length of at least maxversion.buffer_len().
+    /// The smallest possible QR Code version within the given range is automatically
+    /// chosen for the output. Iff boostecl is `true`, then the ECC level of the result
+    /// may be higher than the ecl argument if it can be done without increasing the
+    /// version. The mask number is either between 0 to 7 (inclusive) to force that
+    /// mask, or `None` to automatically choose an appropriate mask (which may be slow).
+    ///
+    /// About the slices, letting len = maxversion.buffer_len():
+    /// - Before calling the function:
+    ///   - The slices dataandtempbuffer and outbuffer each must have a length of at least len.
+    ///   - If a slice is longer than len, then the function will not
+    ///     read from or write to the suffix array[len .. array.len()].
+    ///   - The input slice range dataandtempbuffer[0 .. datalen] should normally be
+    ///     valid UTF-8 text, but is not required by the QR Code standard.
+    ///   - The initial values of dataandtempbuffer[datalen .. len] and outbuffer[0 .. len]
+    ///     can be arbitrary because the function always writes before reading.
+    /// - After the function returns, both slices have no guarantee on what values are stored.
+    ///
+    /// If successful, the resulting QR Code will use byte mode to encode the data.
     ///
     /// In the most optimistic case, a QR Code at version 40 with low ECC can hold any byte
     /// sequence up to length 2953. This is the hard upper limit of the QR Code standard.
     ///
     /// Please consult the QR Code specification for information on
     /// data capacities per version, ECC level, and text encoding mode.
-    ///
-    /// After the function returns, the contents of dataandtemp may have changed,
-    /// and does not represent useful data anymore.
-    ///
-    /// If successful, the resulting QR Code will use byte mode to encode the data.
-    ///
-    /// Returns a wrapped `QrCode` if successful, or `Err` if the
-    /// data is too long to fit in any version at the given ECC level.
     pub fn encode_binary<'b>(
         dataandtempbuffer: &'b mut [u8],
         datalen: usize,
@@ -280,6 +297,12 @@ impl<'a> QrCode<'a> {
 
     /// Returns an intermediate state representing the given segments
     /// with the given encoding parameters being encoded into codewords.
+    ///
+    /// The smallest possible QR Code version within the given range is automatically
+    /// chosen for the output. Iff boostecl is `true`, then the ECC level of the result
+    /// may be higher than the ecl argument if it can be done without increasing the
+    /// version. The mask number is either between 0 to 7 (inclusive) to force that
+    /// mask, or `None` to automatically choose an appropriate mask (which may be slow).
     ///
     /// This function exists to allow segments to use parts of a temporary buffer,
     /// then have the segments be encoded to an output buffer, then invalidate all the segments,

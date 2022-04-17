@@ -25,7 +25,12 @@
  */
 
 extern crate embedded_qr;
-use embedded_qr::{Mask, QrCode, QrCodeEcc, QrDrawable, QrSegment, QrSegmentMode, Version};
+use embedded_qr::Mask;
+use embedded_qr::QrCode;
+use embedded_qr::QrCodeEcc;
+use embedded_qr::QrSegment;
+use embedded_qr::QrSegmentMode;
+use embedded_qr::Version;
 
 // The main application program.
 fn main() {
